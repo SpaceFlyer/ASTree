@@ -1,0 +1,11 @@
+<?php
+
+function notepages_editor_form_alter(&$form, &$form_state, $form_id){
+  $path = drupal_get_path('module', 'notepages_editor');
+  drupal_add_js($path . '/javascripts/LAB.min.js');
+  drupal_add_js($path . '/' . 'notepagesEditor.js', array('weight' => 100)); // Make sure LAB is loaded first
+  drupal_add_css($path . '/stylesheets/stylesheets.css');
+  drupal_add_css($path . '/stylesheets/browser.css');
+//  drupal_add_css($path . '/stylesheets/print.css');
+}
+

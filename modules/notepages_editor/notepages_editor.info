@@ -1,0 +1,7 @@
+name = Notepages Editor
+description = Lets you edit your textarea by notepages editor.
+core = 7.x
+
+core = "7.x"
+project = "notepages_editor"
+
