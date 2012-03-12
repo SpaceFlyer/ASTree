@@ -174,7 +174,7 @@ $LAB
 		.script("modules/notepages_editor/javascripts/browser-uncompressed.js")
 		.script(
 				protocol
-						+ "d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js");
+						+ "d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=default");
 var _gaq = _gaq || [];
 _gaq.push([ '_setAccount', 'UA-13129098-3' ]);
 _gaq.push([ '_trackPageview' ]);

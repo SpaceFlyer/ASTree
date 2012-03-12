@@ -205,10 +205,10 @@ $databases = array (
   array (
     'default' => 
     array (
-      'database' => 'stree',
-      'username' => 'root',
-      'password' => 'topsecret',
-      'host' => 'localhost',
+      'database' => 'yuqian',
+      'username' => 'yuqian',
+      'password' => '8bIkKxNg1',
+      'host' => 'cgi.cs.duke.edu',
       'port' => '',
       'driver' => 'mysql',
       'prefix' => '',
@@ -246,7 +246,7 @@ $update_free_access = FALSE;
  *   $drupal_hash_salt = file_get_contents('/home/example/salt.txt');
  *
  */
-$drupal_hash_salt = 'C6FB1UiuUvhbFNPsNIWrXBYWbL_GVbCpnPe1_bWgiho';
+$drupal_hash_salt = 'AJ6hEkKz7FAlth7ocYW0Rzb3uZnAYf54JLxJlM6MBRo';
 
 /**
  * Base URL (optional).
