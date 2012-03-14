@@ -200,7 +200,7 @@ a img {
 }
 
 #notepages_page {
-  z-index: 700;
+  /* no longer need this: z-index: 700; */
 	width: 720px;
 	background: #fff;
 	margin: 30px auto

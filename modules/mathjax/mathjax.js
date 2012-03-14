@@ -22,6 +22,7 @@
     
       var config = 'MathJax.Hub.Config({' +
                      'extensions: ["tex2jax.js"],' +
+                     'TeX: {extensions: ["AMSmath.js", "AMSsymbols.js"]},' + 
                      'jax: ["input/TeX","output/HTML-CSS"],' +
                      'tex2jax: {' +
                        'inlineMath: [ [\'%%\',\'%%\'], [\'\\\\(\',\'\\\\)\'] ],' +  // look for $...$ and \(...\) as delimiters for inline math
