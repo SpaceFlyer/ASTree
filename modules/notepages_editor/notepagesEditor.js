@@ -136,11 +136,13 @@ function openNotepagesEditor(textarea_id){
   jQuery("#notepages_editor").show();
   jQuery('html, body').animate({ scrollTop: 0 }, 0);
   editor.focus();
+  editor_warning = true;
 }
 
 function closeNotepagesEditor(){
 //  jQuery("#page").show();
   jQuery("#notepages_editor").hide();
+  editor_warning = false;
 }
 
 function adjustPanels(){
@@ -189,3 +191,8 @@ _gaq.push([ '_trackPageview' ]);
 	s.parentNode.insertBefore(ga, s);
 })();
 
+window.onbeforeunload = function() {
+	if (editor_warning) {
+		return 'You change (if any) will be lost by leaving without clicking "save"';
+	}
+}
