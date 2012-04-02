@@ -162,6 +162,25 @@ function notepagesEditor(textareaID)
 	return true;
 }
 
+// The following is pasted from mathjax module to configure mathjax
+var config = 'MathJax.Hub.Config({' +
+     'extensions: ["tex2jax.js"],' +
+     'TeX: {extensions: ["AMSmath.js", "AMSsymbols.js"]},' +
+     'jax: ["input/TeX","output/HTML-CSS"],' +
+     'tex2jax: {' +
+       'inlineMath: [ [\'%%\',\'%%\'], [\'\\\\(\',\'\\\\)\'] ],' +  // look for $...$ and \(...\) as delimiters for inline math
+       'displayMath: [ [\'$$\',\'$$\'], [\'\\\\[\',\'\\\\]\'] ],' + // look for $$...$$ and \[...\] as delimiters for display math
+       'processEscapes: true' +
+     '}' +
+   '});' +
+   'MathJax.Hub.Startup.onload();';
+
+if (window.opera) {script.innerHTML = config}
+   else {script.text = config}
+
+document.getElementsByTagName("head")[0].appendChild(script);
+
+
 // The following is modified from https://github.com/fivesixty/notepages
 
 var editing = true;
