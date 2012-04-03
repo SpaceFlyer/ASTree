@@ -164,6 +164,7 @@ function notepagesEditor(textareaID)
 
 var script = document.createElement("script");
 script.type = "text/javascript";
+script.src  = "https://d3eoax9i5htok0.cloudfront.net/mathjax/1.1-latest/MathJax.js";
 
 // The following is pasted from mathjax module to configure mathjax
 var config = 'MathJax.Hub.Config({' +
