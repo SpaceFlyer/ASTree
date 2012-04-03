@@ -162,6 +162,9 @@ function notepagesEditor(textareaID)
 	return true;
 }
 
+var script = document.createElement("script");
+script.type = "text/javascript";
+
 // The following is pasted from mathjax module to configure mathjax
 var config = 'MathJax.Hub.Config({' +
      'extensions: ["tex2jax.js"],' +
