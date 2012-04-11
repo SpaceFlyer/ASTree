@@ -1,0 +1,47 @@
+<?php
+function astree_install(){
+    $schema['children'] = array(
+            'description' => 'The children relation for nodes',
+            'fields' => array(
+                'id' => array(
+                    'description' => 'Primary Key for this Relation',
+                    'type' => 'serial',
+                    'unsigned' => TRUE,
+                    'not null' => TRUE,
+                    ),
+                'parent_id' => array(
+                    'type' => 'int',
+                    'not null' => TRUE,
+                    'description' => 'The {node}.nid of parent',
+                    ),  
+                'child_id' => array(
+                    'type' => 'int',
+                    'not null' => TRUE,
+                    'description' => 'The {node}.nid of child',
+                    ),  
+                ),
+            );
+
+    $schema['related'] array(
+            'description' => 'The related relation for nodes',
+            'fields' => array(
+                'id' => array(
+                    'description' => 'Primary Key for this Relation',
+                    'type' => 'serial',
+                    'unsigned' => TRUE,
+                    'not null' => TRUE,
+                    ),
+                'from_id' => array(
+                    'type' => 'int',
+                    'not null' => TRUE,
+                    'description' => 'The {node}.nid of A (if A is related to B)',
+                    ),  
+                'to_id' => array(
+                    'type' => 'int',
+                    'not null' => TRUE,
+                    'description' => 'The {node}.nid of B (if A is related to B)',
+                    ),  
+                ),
+            );
+}
+

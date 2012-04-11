@@ -1,0 +1,4 @@
+name = ASTree
+description = Build ASTree (Tree/DAG) hierachy for nodes (children, related, comments).
+core = 7.x
+
