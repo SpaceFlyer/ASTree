@@ -1,0 +1,19 @@
+<?php
+function qsnode_node_info(){
+    return array(
+        'question' => array(
+            'name' => t('Question'),
+            'base' => 'question',
+            'description' => t('Use for Question/Solution hierachy node structure.'),
+        ),
+        'solution' => array(
+            'name' => t('Solution'),
+            'base' => 'solution',
+            'description' => t('Use for Question/Solution hierachy node structure.'),
+        ),
+    );
+}
+
+/*function qsnode_form($node, $form_state){
+    return node_content_form($node, $form_state);
+}*/

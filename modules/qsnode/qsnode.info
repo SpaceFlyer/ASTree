@@ -1,0 +1,3 @@
+name = Question/Solution Node
+description = A node (content) type that supports tree (or DAG) structured Question/Solution hierachy. 
+core = 7.x

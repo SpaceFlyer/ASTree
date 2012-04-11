@@ -194,7 +194,7 @@ var passreq = false;
 var protocol = 'https:' == document.location.protocol ? 'https://' : 'http://';
 $LAB
 		.script(
-				"modules/notepages_editor/javascripts/jquery-1.6.4.min.js")
+				"modules/notepages_editor/javascripts/jquery-1.6.4.js")
 		.wait()
 		.script("modules/notepages_editor/javascripts/browser-uncompressed.js")
 		.script(

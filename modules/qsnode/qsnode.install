@@ -1,0 +1,9 @@
+<?php
+function qsnode_install(){
+    //Copy from Blog module
+    node_types_rebuild();
+    $types = node_type_get_types();
+    node_add_body_field($types['question']);
+    node_add_body_field($types['solution']);
+}
+
