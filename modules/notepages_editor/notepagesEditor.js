@@ -99,6 +99,7 @@ function notepagesEditorInit()
   </div>\
   </div>';
   jQuery("body").prepend(editor_div_html);
+  prepare_editor();
   
   // If there's no 100ms delay, ace editor will be blank white...
   // This can be solved by preview/exit preview
@@ -128,11 +129,11 @@ function openNotepagesEditor(textarea_id){
 //  jQuery("#page").hide();
   adjustPanels();
   editing_textarea_id = textarea_id;
-  editor.getSession().setValue($("#"+textarea_id).val());
-  $("#preview").click();
+  editor.getSession().setValue(jQuery("#"+textarea_id).val());
+  jQuery("#preview").click();
   setTimeout('\
 		  while (notepages_previewing)\
-			  $("#preview").click();', 500);
+			  jQuery("#preview").click();', 500);
   jQuery("#notepages_editor").show();
   jQuery('html, body').animate({ scrollTop: 0 }, 0);
   editor.focus();
@@ -187,35 +188,42 @@ document.getElementsByTagName("head")[0].appendChild(script);
 
 // The following is modified from https://github.com/fivesixty/notepages
 
-var editing = true;
-var pagename = "l4J5U9";
-var passreq = false;
+function prepare_editor(){
 
-var protocol = 'https:' == document.location.protocol ? 'https://' : 'http://';
-$LAB
-		.script(
-				"modules/notepages_editor/javascripts/jquery-1.6.4.js")
-		.wait()
-		.script("modules/notepages_editor/javascripts/browser-uncompressed.js")
-		.script(
-				protocol
-						+ "d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=default");
-var _gaq = _gaq || [];
-_gaq.push([ '_setAccount', 'UA-13129098-3' ]);
-_gaq.push([ '_trackPageview' ]);
-(function() {
-	var ga = document.createElement('script');
-	ga.type = 'text/javascript';
-	ga.async = true;
-	ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-			: 'http://www')
-			+ '.google-analytics.com/ga.js';
-	var s = document.getElementsByTagName('script')[0];
-	s.parentNode.insertBefore(ga, s);
-})();
+    editing = true;
+    pagename = "l4J5U9";
+    passreq = false;
 
-window.onbeforeunload = function() {
-	if (editor_warning) {
-		return 'You change (if any) will be lost by leaving without clicking "save"';
-	}
+    $ = jQuery;
+
+    var protocol = 'https:' == document.location.protocol ? 'https://' : 'http://';
+    $LAB
+        // SpaceFlyer: jquery is already loaded by drupal. This additional load may cause compatibility problem
+        //		.script(
+        //				"modules/notepages_editor/javascripts/jquery-1.6.4.js")
+        .wait()
+        .script("modules/notepages_editor/javascripts/browser-uncompressed.js")
+        .script(
+                protocol
+                + "d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=default");
+    var _gaq = _gaq || [];
+    _gaq.push([ '_setAccount', 'UA-13129098-3' ]);
+    _gaq.push([ '_trackPageview' ]);
+    (function() {
+        var ga = document.createElement('script');
+        ga.type = 'text/javascript';
+        ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+            : 'http://www')
+            + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(ga, s);
+    })();
+
+    window.onbeforeunload = function() {
+        if (editor_warning) {
+            return 'You change (if any) will be lost by leaving without clicking "save"';
+        }
+    }
+
 }
