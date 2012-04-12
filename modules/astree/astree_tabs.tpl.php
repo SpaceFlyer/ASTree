@@ -1,6 +1,6 @@
 <script>
-	$(function(){
-		$('#astree_tabs').tabs();
+	jQuery(document).ready(function(){
+		jQuery('#astree_tabs').tabs();
 	});
 </script>
 
