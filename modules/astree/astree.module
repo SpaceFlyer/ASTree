@@ -1,14 +1,27 @@
 <?php
 function astree_node_view_alter(&$build){
-    echo "I'm Here!!!";
+	if ($build['#view_mode'] == 'full'){
+		drupal_add_library("system", "ui.tabs");
+		$build['astree_tabs'] = array(
+				'#markup' => theme('astree_tabs',
+						array(
+								'comments' => $build['comments'],
+								'children' => NULL,
+								'related' => NULL
+						)
+				)
+		);
+//		print_r($build);
+	}
+	echo "I'm Here!!!";
 }
 
 function astree_theme(){
-    return array(
-        'astree_tabs' => array(
-            'template' => 'astree_tabs',
-            'variables' => array('children' => NULL, 'related' => NULL, 'comments' => NULL);
-        );
-    );
+	return array(
+			'astree_tabs' => array(
+					'template' => 'astree_tabs',
+					'variables' => array('children' => NULL, 'related' => NULL, 'comments' => NULL),
+			),
+	);
 }
 
