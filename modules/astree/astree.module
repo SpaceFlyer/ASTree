@@ -1,2 +1,14 @@
 <?php
+function astree_node_view_alter(&$build){
+    echo "I'm Here!!!";
+}
+
+function astree_theme(){
+    return array(
+        'astree_tabs' => array(
+            'template' => 'astree_tabs',
+            'variables' => array('children' => NULL, 'related' => NULL, 'comments' => NULL);
+        );
+    );
+}
 
