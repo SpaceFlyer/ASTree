@@ -2,18 +2,22 @@
 function astree_node_view_alter(&$build){
 	if ($build['#view_mode'] == 'full'){
 		drupal_add_library("system", "ui.tabs");
-		$build['astree_tabs'] = array(
+		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
+		// We have to substitue comments field, rather than add some
+		// new field, because the outter theme (node.tpl.php) did a specific
+		// work to put comments field to the bottom
+		$build['comments'] = array(
 				'#markup' => theme('astree_tabs',
 						array(
 								'comments' => $build['comments'],
 								'children' => NULL,
 								'related' => NULL
 						)
-				)
+				),
 		);
-//		print_r($build);
+// 		unset($build['comments']);
+// 		print_r($build);
 	}
-	echo "I'm Here!!!";
 }
 
 function astree_theme(){
