@@ -3,6 +3,13 @@ function astree_node_view_alter(&$build){
 	if ($build['#view_mode'] == 'full'){
 		drupal_add_library("system", "ui.tabs");
 		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
+
+		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = 1");
+// 		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = :parent_id",
+// 				array(':parrent_id' => $build['#node']->nid));
+// 		$children_result = db_query('SELECT * FROM block');
+// 		print_r($children_result);
+		
 		// We have to substitue comments field, rather than add some
 		// new field, because the outter theme (node.tpl.php) did a specific
 		// work to put comments field to the bottom
