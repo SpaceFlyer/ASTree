@@ -4,12 +4,23 @@ function astree_node_view_alter(&$build){
 		drupal_add_library("system", "ui.tabs");
 		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
 
-		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = 1");
-// 		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = :parent_id",
-// 				array(':parrent_id' => $build['#node']->nid));
-// 		$children_result = db_query('SELECT * FROM block');
-// 		print_r($children_result);
-		
+ 		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = :parent_id",
+ 				array(':parent_id' => $build['#node']->nid));
+ 		$related_result = db_query("SELECT to_id FROM related WHERE from_id = :from_id",
+ 				array(':from_id' => $build['#node']->nid));
+ 		
+ 		$children = array();
+ 		while ($child = $children_result->fetchObject()){
+ 			$node = node_load($child->child_id);
+ 			$children[] = node_view($node, 'teaser');
+ 		}
+ 		
+ 		$related = array();
+ 		while ($record = $related_result->fetchObject()){
+ 			$node = node_load($record->to_id);
+ 			$related[] = node_view($node, 'teaser');
+ 		}
+ 			
 		// We have to substitue comments field, rather than add some
 		// new field, because the outter theme (node.tpl.php) did a specific
 		// work to put comments field to the bottom
@@ -17,8 +28,8 @@ function astree_node_view_alter(&$build){
 				'#markup' => theme('astree_tabs',
 						array(
 								'comments' => $build['comments'],
-								'children' => NULL,
-								'related' => NULL
+								'children' => $children,
+								'related' => $related
 						)
 				),
 		);
