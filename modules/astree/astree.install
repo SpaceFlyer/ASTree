@@ -78,15 +78,3 @@ function astree_schema(){
 
 	return $schema;
 }
-
-function astree_install() {
-	echo "Install here!";
-	// Create my tables.
-	drupal_install_schema('astree');
-}
-
-function astree_uninstall() {
-	echo "Uninstall here!";
-	// Drop my tables.
-	drupal_uninstall_schema('astree');
-}
