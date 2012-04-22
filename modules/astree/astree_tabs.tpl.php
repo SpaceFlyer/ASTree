@@ -12,12 +12,16 @@
 	</ul>
 	
 	<div id="tabs-1">
-		<?php echo render($children); ?>
+		<?php hide($children['new_child_form']); echo render($children); ?>
+		<h2 class="title child-form"><?php echo t('Add new child'); ?></h2>
+		<?php echo render($children['new_child_form']); ?>
 	</div>
 	
 	<div id="tabs-2">
-		<?php echo render($related); ?>
-	</div>
+		<?php hide($related['new_related_form']); echo render($related); ?>
+		<h2 class="title related-form"><?php echo t('Add new related'); ?></h2>
+		<?php echo render($related['new_related_form']); ?>
+		</div>
 	
 	<div id="tabs-3">
 		<?php echo render($comments); ?>

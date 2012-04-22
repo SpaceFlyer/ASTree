@@ -9,17 +9,43 @@ function astree_node_view_alter(&$build){
  		$related_result = db_query("SELECT to_id FROM related WHERE from_id = :from_id",
  				array(':from_id' => $build['#node']->nid));
  		
+ 		$node = $build['#node'];
+ 		
  		$children = array();
  		while ($child = $children_result->fetchObject()){
  			$node = node_load($child->child_id);
  			$children[] = node_view($node, 'teaser');
  		}
  		
+ 		// This line is necessary...
+ 		// However, preview seems still not work
+ 		module_load_include('inc', 'node', 'node.pages');
+ 		
+ 		global $user;
+ 		
+ 		$new_node = (object) array(
+ 				'uid' => $user->uid,
+ 				'name' => (isset($user->name) ? $user->name : ''),
+ 				'type' => $node->type,
+ 				'language' => LANGUAGE_NONE,
+ 		); 		
+ 		$child_form = drupal_get_form($node->type . '_node_form', $new_node); // TODO Change to the child type we need according to parent type
+ 		$children['new_child_form'] = $child_form;
+ 		
  		$related = array();
  		while ($record = $related_result->fetchObject()){
  			$node = node_load($record->to_id);
  			$related[] = node_view($node, 'teaser');
  		}
+ 		
+ 		$new_node = (object) array(
+ 				'uid' => $user->uid,
+ 				'name' => (isset($user->name) ? $user->name : ''),
+ 				'type' => $node->type,
+ 				'language' => LANGUAGE_NONE,
+ 		); 
+ 		$related_form = drupal_get_form($node->type . '_node_form', $new_node);
+   		$related['new_related_form'] = $related_form;
  			
 		// We have to substitue comments field, rather than add some
 		// new field, because the outter theme (node.tpl.php) did a specific
