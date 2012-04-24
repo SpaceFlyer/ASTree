@@ -16,6 +16,7 @@ function astree_get_recommend_child_list($parent_id){
 function astree_node_view_alter(&$build){
 	if ($build['#view_mode'] == 'full'){
 		drupal_add_library("system", "ui.tabs");
+		drupal_add_library("system", "ui.dialog");
 		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
 
  		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = :parent_id",
@@ -99,20 +100,24 @@ function astree_theme(){
 
 function astree_menu(){
 	$items['add_child'] = array(
+			'title' => 'add child',
 			'page callback' => 'astree_add_child',
 			
 			// TODO This line is necessary. We should define better access check
 			'access arguments' => array('access content'), 
 	);
 	$items['add_related'] = array(
+			'title' => 'add related',
 			'page callback' => 'astree_add_related',
 			'access arguments' => array('access content'), // TODO better access check
 	);
 	$items['remove_child'] = array(
+			'title' => 'remove child',
 			'page callback' => 'astree_remove_child',
 			'access arguments' => array('access content'), // TODO better access check
 	);
 		$items['remove_related'] = array(
+			'title' => 'remove related',
 			'page callback' => 'astree_remove_related',
 			'access arguments' => array('access content'), // TODO better access check
 	);
