@@ -1,5 +1,18 @@
 <?php
 
+function astree_get_recommend_related_list($from_id){
+	$query = db_select('node', 'n')
+	->fields('n', array('nid', 'title', 'created'))
+	->condition('status', 1) //Published.
+	->orderBy('created', 'DESC') //Most recent first.
+	->execute();
+	return $query;
+}
+
+function astree_get_recommend_child_list($parent_id){
+	return astree_get_recommend_related_list($parent_id); // TODO specify child recommend ranking
+}
+
 function astree_node_view_alter(&$build){
 	if ($build['#view_mode'] == 'full'){
 		drupal_add_library("system", "ui.tabs");
@@ -12,7 +25,7 @@ function astree_node_view_alter(&$build){
  		
  		$node = $build['#node'];
  		
- 		$children = array();
+ 		$children = array('#parent_id' => $node->nid);
  		while ($child = $children_result->fetchObject()){
  			$node = node_load($child->child_id);
  			$children[] = node_view($node, 'teaser');
@@ -33,6 +46,16 @@ function astree_node_view_alter(&$build){
  		$child_form = drupal_get_form($node->type . '_node_form', $new_node); // TODO Change to the child type we need according to parent type
  		$children['new_child_form'] = $child_form;
  		
+ 		$list = astree_get_recommend_child_list($node->nid);
+ 		$items = array();
+ 		foreach ($list as $child){
+ 			$items[] = array(
+ 					'title' => l($child->title, 'node/'.$child->nid),
+ 					'action' => l(t('Add this as child'), "add_child/{$node->nid}/{$child->nid}") // TODO Make this AJAX
+ 			);
+ 		}
+ 		$children['recommend_child_list'] = $items;
+ 			
  		$related = array();
  		while ($record = $related_result->fetchObject()){
  			$node = node_load($record->to_id);
@@ -96,8 +119,23 @@ function astree_menu(){
 	return $items;
 }
 
+function astree_parse_nid($post){
+	if ($post){
+		preg_match('/node\/(\d+)/', $post, $matches);
+		if ($matches[1])
+			return $matches[1];
+		preg_match('/\d+/', $post, $matches);
+		if ($matches[0])
+			return $matches[0];
+	}
+	return null;
+}
+
 function astree_add_child($parent_id, $child_id){
 	echo 'add parent_id, child_id = '.$parent_id.', '.$child_id;
+	$post = $_POST['child_link_or_nid'];
+	if ($child_id == null)
+		$child_id = astree_parse_nid($post);
 	db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
 			array(':parent_id' => $parent_id, ':child_id' => $child_id));
 }
