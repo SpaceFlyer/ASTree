@@ -1,4 +1,5 @@
 <?php
+
 function astree_node_view_alter(&$build){
 	if ($build['#view_mode'] == 'full'){
 		drupal_add_library("system", "ui.tabs");
@@ -73,3 +74,48 @@ function astree_theme(){
 	);
 }
 
+function astree_menu(){
+	$items['add_child'] = array(
+			'page callback' => 'astree_add_child',
+			
+			// TODO This line is necessary. We should define better access check
+			'access arguments' => array('access content'), 
+	);
+	$items['add_related'] = array(
+			'page callback' => 'astree_add_related',
+			'access arguments' => array('access content'), // TODO better access check
+	);
+	$items['remove_child'] = array(
+			'page callback' => 'astree_remove_child',
+			'access arguments' => array('access content'), // TODO better access check
+	);
+		$items['remove_related'] = array(
+			'page callback' => 'astree_remove_related',
+			'access arguments' => array('access content'), // TODO better access check
+	);
+	return $items;
+}
+
+function astree_add_child($parent_id, $child_id){
+	echo 'add parent_id, child_id = '.$parent_id.', '.$child_id;
+	db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
+			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+}
+
+function astree_remove_child($parent_id, $child_id){
+	echo 'remove parent_id, child_id = '.$parent_id.', '.$child_id;
+	db_query("DELETE FROM children WHERE parent_id = :parent_id AND child_id = :child_id",
+			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+}
+
+function astree_add_related($from_id, $to_id){
+	echo 'add from_id, to_id = '.$from_id.', '.$to_id;
+	db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
+			array(':from_id' => $from_id, ':to_id' => $to_id));
+}
+
+function astree_remove_related($from_id, $to_id){
+	echo 'remove from_id, to_id = '.$from_id.', '.$to_id;
+	db_query("DELETE FROM related WHERE from_id = :from_id AND to_id = :to_id",
+			array(':from_id' => $from_id, ':to_id' => $to_id));
+}
