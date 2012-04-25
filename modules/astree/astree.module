@@ -137,28 +137,45 @@ function astree_parse_nid($post){
 }
 
 function astree_add_child($parent_id, $child_id){
-	echo 'add parent_id, child_id = '.$parent_id.', '.$child_id;
 	$post = $_POST['child_link_or_nid'];
 	if ($child_id == null)
 		$child_id = astree_parse_nid($post);
-	db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
+// 	echo 'add parent_id, child_id = '.$parent_id.', '.$child_id;
+	$result = db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
 			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+	drupal_set_message($result->rowCount().' child has been successfully added.');
+	drupal_goto('node/'.$parent_id);
 }
 
 function astree_remove_child($parent_id, $child_id){
-	echo 'remove parent_id, child_id = '.$parent_id.', '.$child_id;
-	db_query("DELETE FROM children WHERE parent_id = :parent_id AND child_id = :child_id",
+	$post = $_POST['child_link_or_nid'];
+	if ($child_id == null)
+		$child_id = astree_parse_nid($post);
+// 	echo 'remove parent_id, child_id = '.$parent_id.', '.$child_id;
+	$result = db_query("DELETE FROM children WHERE parent_id = :parent_id AND child_id = :child_id",
 			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+	drupal_set_message($result->rowCount().' child has been successfully removed.');
+	drupal_goto('node/'.$parent_id);
 }
 
 function astree_add_related($from_id, $to_id){
-	echo 'add from_id, to_id = '.$from_id.', '.$to_id;
-	db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
+	$post = $_POST['to_link_or_nid'];
+	if ($to_id == null)
+		$to_id = astree_parse_nid($post);
+// 	echo 'add from_id, to_id = '.$from_id.', '.$to_id;
+	$result = db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
 			array(':from_id' => $from_id, ':to_id' => $to_id));
+	drupal_set_message($result->rowCount().' related node has been successfully added.');
+	drupal_goto('node/'.$from_id);
 }
 
 function astree_remove_related($from_id, $to_id){
-	echo 'remove from_id, to_id = '.$from_id.', '.$to_id;
-	db_query("DELETE FROM related WHERE from_id = :from_id AND to_id = :to_id",
+	$post = $_POST['to_link_or_nid'];
+	if ($to_id == null)
+		$to_id = astree_parse_nid($post);
+// 	echo 'remove from_id, to_id = '.$from_id.', '.$to_id;
+	$result = db_query("DELETE FROM related WHERE from_id = :from_id AND to_id = :to_id",
 			array(':from_id' => $from_id, ':to_id' => $to_id));
+	drupal_set_message($result->rowCount().' related node has been successfully removed.');
+	drupal_goto('node/'.$from_id);
 }
