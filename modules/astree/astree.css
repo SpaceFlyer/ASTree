@@ -1,5 +1,38 @@
 /* TODO more style for add existed child/related tab */
 
+.astree_dialog h2{
+	margin-bottom: 10px;
+}
+
+.astree_dialog hr{
+	margin: 15px 0px;
+}
+
+.astree_dialog input[type='text']{
+	width: 430px;
+	margin-left: 25px;
+	margin-top: 10px;
+}
+
+.astree_dialog a{
+	font-weight: bold;
+}
+
+.astree_dialog .actions a{
+	font-weight: normal;
+	color: white;
+	background-color: #074764;
+	background-repeat: no-repeat;
+	background-position: 2px center;
+	padding: 4px 4px 2px 6px;
+	-webkit-border-radius: 3px;
+}
+
+.astree_dialog .actions {
+	padding-left: 10px;
+	margin: 5px 0px;
+}
+
 #astree_tabs{
 	margin-top: 20px;
 }

@@ -17,27 +17,29 @@
 			hide($children['recommend_child_list']);
 			echo render($children); 
 		?>
-		<div id="add_existed_child_tab">
+		<div id="add_existed_child_tab" class="astree_dialog">
 			<h2 class="title"><?= t('Add existed node as child') ?></h2>
 			<form action="?q=add_child/<?= $children['#parent_id'] ?>" method="post">
-				<label><?= t('The link or id of the node') ?></label>
+				<label><?= t('From link or id of the node:') ?></label>
 				<input type="text" name="child_link_or_nid" id="child_link_or_nid"/>
 				<input type="submit" value="Submit">
 			</form>
 			<hr/>
+			<label><?= t('From recommend list:') ?></label>
 			<ul>
 				<?php foreach ($children['recommend_child_list'] as $child) { ?>
 				<li>
 					<?php echo $child['title'] ?>
-					</br>
-					<?php echo $child['action'] ?>
+					<div class="actions">
+						<?php echo $child['action'] ?>
+					</div>
 				</li>
 				<?php } ?>
 			</ul>
 		</div>
 		<script>
 			jQuery(document).ready(function(){
-				jQuery('#add_existed_child_tab').dialog({ autoOpen: false });
+				jQuery('#add_existed_child_tab').dialog({ autoOpen: false, width: 600, height: 450 });
 			});
 		</script>
 		<a href="javascript:void(0)" onclick="jQuery('#add_existed_child_tab').dialog('open')">Add new child from existed node</a>
