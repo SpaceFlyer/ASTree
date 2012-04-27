@@ -28,13 +28,13 @@ function astree_node_view_alter(&$build){
  		
  		$children = array('#parent_id' => $node->nid);
  		while ($child = $children_result->fetchObject()){
- 			$node = node_load($child->child_id);
- 			$children[] = node_view($node, 'teaser');
+ 			$child_node = node_load($child->child_id);
+ 			$children[] = node_view($child_node, 'teaser');
  		}
  		
- 		// This line is necessary...
+ 		// This line is necessary... see a comment in http://api.drupal.org/api/drupal/includes%21form.inc/function/drupal_get_form/7
  		// However, preview seems still not work
- 		module_load_include('inc', 'node', 'node.pages');
+ 		form_load_include($form_state, 'inc', 'node', 'node.pages');
  		
  		global $user;
  		
@@ -45,6 +45,11 @@ function astree_node_view_alter(&$build){
  				'language' => LANGUAGE_NONE,
  		); 		
  		$child_form = drupal_get_form($node->type . '_node_form', $new_node); // TODO Change to the child type we need according to parent type
+ 		$child_form['parent_id'] = array(
+ 				'#name' => 'parent_id', // This name is required!
+ 				'#type' => 'hidden',
+ 				'#value' => $node->nid,
+ 		);
  		$children['new_child_form'] = $child_form;
  		
  		$list = astree_get_recommend_child_list($node->nid);
@@ -52,15 +57,16 @@ function astree_node_view_alter(&$build){
  		foreach ($list as $child){
  			$items[] = array(
  					'title' => l($child->title, 'node/'.$child->nid),
- 					'action' => l(t('Add this as child'), "add_child/{$node->nid}/{$child->nid}") // TODO Make this AJAX
+ 					'action' => l(t('Add this as child'), "add_child/{$node->nid}/{$child->nid}")
  			);
  		}
  		$children['recommend_child_list'] = $items;
  			
- 		$related = array();
+ 		// ---------------Related----------------
+ 		$related = array("#from_id" => $node->nid);
  		while ($record = $related_result->fetchObject()){
- 			$node = node_load($record->to_id);
- 			$related[] = node_view($node, 'teaser');
+ 			$related_node = node_load($record->to_id);
+ 			$related[] = node_view($related_node, 'teaser');
  		}
  		
  		$new_node = (object) array(
@@ -70,7 +76,22 @@ function astree_node_view_alter(&$build){
  				'language' => LANGUAGE_NONE,
  		); 
  		$related_form = drupal_get_form($node->type . '_node_form', $new_node);
+ 		$related_form['from_id'] = array(
+ 				'#type' => 'hidden',
+ 				'#value' => $node->nid,
+ 				'#name' => 'from_id',
+ 		);
    		$related['new_related_form'] = $related_form;
+   		
+   		$list = astree_get_recommend_related_list($node->nid);
+   		$items = array();
+   		foreach ($list as $related_node){
+   			$items[] = array(
+   					'title' => l($related_node->title, 'node/'.$related_node->nid),
+   					'action' => l(t('Add this as related'), "add_related/{$node->nid}/{$related_node->nid}") 
+   					);
+   		}
+   		$related['recommend_related_list'] = $items;
  			
 		// We have to substitue comments field, rather than add some
 		// new field, because the outter theme (node.tpl.php) did a specific
@@ -136,13 +157,18 @@ function astree_parse_nid($post){
 	return null;
 }
 
+function _add_child($parent_id, $child_id){
+	$result = db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
+			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+	return $result;	
+}
+
 function astree_add_child($parent_id, $child_id){
 	$post = $_POST['child_link_or_nid'];
 	if ($child_id == null)
 		$child_id = astree_parse_nid($post);
 // 	echo 'add parent_id, child_id = '.$parent_id.', '.$child_id;
-	$result = db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
-			array(':parent_id' => $parent_id, ':child_id' => $child_id));
+	$result = _add_child($parent_id, $child_id);
 	drupal_set_message($result->rowCount().' child has been successfully added.');
 	drupal_goto('node/'.$parent_id);
 }
@@ -158,19 +184,24 @@ function astree_remove_child($parent_id, $child_id){
 	drupal_goto('node/'.$parent_id);
 }
 
+function _add_related($from_id, $to_id){
+	$result = db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
+			array(':from_id' => $from_id, ':to_id' => $to_id));
+	return $result;
+}
+
 function astree_add_related($from_id, $to_id){
-	$post = $_POST['to_link_or_nid'];
+	$post = $_POST['related_link_or_nid'];
 	if ($to_id == null)
 		$to_id = astree_parse_nid($post);
 // 	echo 'add from_id, to_id = '.$from_id.', '.$to_id;
-	$result = db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
-			array(':from_id' => $from_id, ':to_id' => $to_id));
+	$result = _add_related($from_id, $to_id);
 	drupal_set_message($result->rowCount().' related node has been successfully added.');
 	drupal_goto('node/'.$from_id);
 }
 
 function astree_remove_related($from_id, $to_id){
-	$post = $_POST['to_link_or_nid'];
+	$post = $_POST['related_link_or_nid'];
 	if ($to_id == null)
 		$to_id = astree_parse_nid($post);
 // 	echo 'remove from_id, to_id = '.$from_id.', '.$to_id;
@@ -178,4 +209,18 @@ function astree_remove_related($from_id, $to_id){
 			array(':from_id' => $from_id, ':to_id' => $to_id));
 	drupal_set_message($result->rowCount().' related node has been successfully removed.');
 	drupal_goto('node/'.$from_id);
+}
+
+function astree_node_submit($node, $form, $form_state){
+ 	$node->parent_id = $form_state['input']['parent_id'];
+ 	$node->from_id = $form_state['input']['from_id'];
+}
+
+function astree_node_insert($node){
+	if ($node->parent_id){
+		_add_child($node->parent_id, $node->nid);
+	}
+	if ($node->from_id){
+		_add_related($node->from_id, $node->nid);
+	}
 }
