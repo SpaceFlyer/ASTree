@@ -1,5 +1,10 @@
 /* TODO more style for add existed child/related tab */
 
+#astree_tabs .node-answer-sql h2{
+    font-family: monospace;
+    font-size: 16px;
+}
+
 .astree_dialog h2{
 	margin-bottom: 10px;
 }
