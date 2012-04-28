@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Bartik's theme implementation to display a node.
@@ -77,14 +76,61 @@
  * @see template_preprocess_node()
  * @see template_process()
  */
+//if(module_exists('CQF_sql'))
+//	$Answers=CQF_sql_get_statistics($node->nid,'children');	
+//	$subqueries=CQF_sql_get_statistics($node->nid,'related');	
+//}
+foreach($content as $key => $value)
+{
+	if($key=='SQL_answers')
+	{
+		$sql_count=$content[$key]['markup'];
+	}
+	if($key=='subquery')
+	{
+		$subquery_count=$content[$key]['markup'];
+	}
+}
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
-
+ 
   <?php print render($title_prefix); ?>
   <?php if (!$page): ?>
+	<div class='question-summary'>
+	<div class='cp'>
+	<div class='votes'>
+	<div class='mini-counts'>
+	<?php	print $sql_count; ?>
+	</div>
+	<div>
+	Answers
+	</div>
+	</div>
+	<div class='votes'>
+		<div class='mini-counts'>
+		<?php	print $subquery_count; ?>
+		</div>
+		<div>
+		Subqueries
+		</div>
+	</div>
+	
+	<div class='votes'>
+		<div class='mini-counts'>
+		<?php	print $comment_count; ?>
+		</div>
+		<div>
+		Comments
+		</div>
+	</div>
+	
+	</div>
+	<div class='summary'>
     <h2<?php print $title_attributes; ?>>
       <a href="<?php print $node_url; ?>"><?php print $title; ?></a>
     </h2>
+	</div>
+	</div>
   <?php endif; ?>
   <?php print render($title_suffix); ?>
 
@@ -100,6 +146,7 @@
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);
       hide($content['links']);
+      hide($content['my_field']);
       print render($content);
     ?>
   </div>

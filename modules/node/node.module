@@ -213,6 +213,7 @@ function node_entity_info() {
       ),
     );
   }
+  
 
   // Bundles must provide a human readable name so we can create help and error
   // messages, and the path to attach Field admin pages to.
