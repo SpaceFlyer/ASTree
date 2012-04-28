@@ -226,3 +226,8 @@ function astree_node_insert($node){
 		_add_related($node->from_id, $node->nid);
 	}
 }
+
+function astree_node_delete($node){
+	db_query("DELETE FROM {related} WHERE from_id = :id OR to_id = :id", array(':id' => $node->nid));
+	db_query("DELETE FROM {children} WHERE parent_id = :id OR child_id = :id", array(':id' => $node->nid));
+}
