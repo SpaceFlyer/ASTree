@@ -17,6 +17,11 @@ return $conn1;
 }
 
 
+
+
+
+
+
 function CQFsql_menu(){
 	$items['add_table']=array(
 			'title'=> 'Information for an Intermediate Table',
@@ -38,6 +43,11 @@ c.parent_id=:parent_id',array(':parent_id'=>$sql_id,':tablename'=>$table_name));
 	$rid=$r->rid;
 //	$result=db_update('children')->fields(array('child_id'=>$child_id))->condition('id',$rid)->execute();
 	$result=db_query('UPDATE {children} SET child_id=:child_id WHERE id=:rid',array(':child_id'=>$child_id,':rid'=>$rid));
+	$result=db_query('select count(*) FROM {related} WHERE from_id=:parent_id and to_id=:child_id',array(':parent_id'=>$parent_id,':child_id'=>$child_id));
+	if($result->rowCount()==0)
+	{
+		db_insert('related')->fields(array('from_id'=>$parent_id,'to_id'=>$child_id));
+	}
 	drupal_set_message('Link Successfully Created');
 	drupal_goto('node/'.$sql_id);	
 
@@ -69,13 +79,20 @@ function CQFsql_node_view_alter(&$build)
 		{
 			$list=CQFsql_get_recommend_child_list($pid);
 			$itemset=array();
+			$nodeset=array();
 			$child_tables_result=db_query('select name from {table_names} as t,{children}
 as c where c.parent_id=:parent_id and child_id=-1 and
 t.rid=c.id',array(':parent_id'=>$new_node->nid));
 			if($child_tables_result->rowCount()==0 && $new_node->status!=1)
 			{
+				$new_node->status=1;
+				$new_node->title=str_replace("?^","",$new_node->title);
+			//		node_save(&$new_node));
+				db_update('node')->fields(array('title'=>$new_node->title))->condition('nid',$new_node->nid,'=')->execute();
 				db_update('node')->fields(array('status'=>1))->condition('nid',$new_node->nid,'=')->execute();
-			}	
+			}
+				
+ 		form_load_include($form_state, 'inc', 'node', 'node.pages');
 			foreach($child_tables_result as $child_table)
 			{
 				$table_name=$child_table->name;
@@ -87,11 +104,30 @@ t.rid=c.id',array(':parent_id'=>$new_node->nid));
 							'action'=>l(t('Use this query as 
 '.$table_name),"add_table/{$pid}/{$new_node->nid}/{$table_name}/{$child->nid}")
 							);
+
+
+				// New part added for question form for
+				// subquery popup
+				
+ 				$new_new_node = (object) array(
+ 					'uid' => $user->uid,
+ 					'name' => (isset($user->name) ? $user->name : ''),
+ 					'type' => $child_type,
+ 					'language' => LANGUAGE_NONE,
+ 				); 		
+				$new_form=drupal_get_form('nl_question',$new_new_node);
+	$new_form['parent_nlq']=array('#name'=>'parent_nlq','#type'=>'hidden','#value'=>$pid);
+	$new_form['parent_sql']=array('#name'=>'parent_sql','#type'=>'hidden','#value'=>$new_node->nid);
+	$new_form['table_name']=array('#name'=>'table_name','#type'=>'hidden','#value'=>$table_name);
+
+				//
+
 				}
+				$nodeset[$table_name]=$new_form;
 				$itemset[$table_name]=$items;
 			}
 		}
-		$build['newfield']=array('#markup'=>theme('CQFsql_node',array('itemset'=>$itemset)));	
+		$build['newfield']=array('#markup'=>theme('CQFsql_node',array('itemset'=>$itemset,'nodeset'=>$nodeset)));	
 	   }	
 	
 }
@@ -389,6 +425,10 @@ autoOpen: false, width: 600, height: 450 });
 
 function CQFsql_node_insert($node)
 {
+	if ($node->parent_sql){
+		CQFsql_add_table($node->parent_nlq,
+$node->parent_sql,$node->table_name,$node->nid);
+	}
 	if($node->type=='answer_sql' && $node->op!='Delete')
 	{
 		$sql_query=$node->title;
@@ -408,7 +448,7 @@ function CQFsql_node_insert($node)
 			$id_table_names=db_insert('table_names')->fields(array('rid'=>$id_children,'name'=>$list_of_new_tables[$i]))->execute();
 		}
 		$node->title=str_replace("?^","",$node->title);
-	//	db_update('node')->fields(array('title'=>$new_query))->condition('nid',$node->nid)->execute();
+	//	db_update('node')->fields(array('title'=>$node->title))->condition('nid',$node->nid)->execute();
 	}
 		
 }
@@ -466,12 +506,22 @@ function CQFsql_node_view($node,$view_mode)
 
 }
 
+function CQFsql_node_submit($node, $form, $form_state){
+ 	$node->parent_nlq = $form_state['input']['parent_nlq'];
+ 	$node->parent_sql = $form_state['input']['parent_sql'];
+	$node->table_name = $form_state['input']['table_name'];
+
+}
+
+
+
+
 function CQFsql_theme()
 {
     return array(
     'CQFsql_node' => array(
       'template' => 'CQFsql_node',
-      'variables' => array('itemset' => NULL),
+      'variables' => array('itemset' => NULL,'nodeset'=>NULL),
     ),
   );
 }

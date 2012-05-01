@@ -17,7 +17,21 @@ overflow:hidden;
 padding:11px 0px;
 width:730px;
 float:left;}
-.question-summary .cp{float:right;}
+.question-summary .cp{
+    float:right;
+    margin-right: 30px;
+}
+
+#astree_tabs .question-summary .cp{
+    margin-right: 80px;
+}
+
+#astree_tabs .question-summary .votes{
+    margin:0 0px 0 0;
+    padding:0px;
+    width:60px;
+}
+
 .question-summary .summary{float:none;width:auto;padding-right:200px;}
 .question-summary .votes{
 background:transparent;

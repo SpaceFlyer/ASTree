@@ -1,4 +1,5 @@
 <?php foreach($itemset as $table_name=>$recommend_set){
+	echo render($nodeset[$table_name]); 
 echo "<div id='add_table_dialog_".$table_name."' class='astree_dialog' >";?>
 <label><?= t('From recommend list:') ?></label>
 <ul>
@@ -18,7 +19,7 @@ jQuery(document).ready(function(){
 <?php echo "jQuery('#add_table_dialog_".$table_name."').dialog({autoOpen:false, width: 600, height: 450 });";?>
 			});
 		</script>
-<?php echo "<a href='javascript:void(0)' onclick=\"jQuery('#add_table_dialog_".$table_name."').dialog('open')\">Ente More Information about".$table_name."</a>";?>
+<?php echo "<a href='javascript:void(0)' onclick=\"jQuery('#add_table_dialog_".$table_name."').dialog('open')\">Describe ".$table_name." or choose a similar description</a>";?>
 </ul>
 <?php }?>
 		
