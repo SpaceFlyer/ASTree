@@ -43,10 +43,13 @@ c.parent_id=:parent_id',array(':parent_id'=>$sql_id,':tablename'=>$table_name));
 	$rid=$r->rid;
 //	$result=db_update('children')->fields(array('child_id'=>$child_id))->condition('id',$rid)->execute();
 	$result=db_query('UPDATE {children} SET child_id=:child_id WHERE id=:rid',array(':child_id'=>$child_id,':rid'=>$rid));
-	$result=db_query('select count(*) FROM {related} WHERE from_id=:parent_id and to_id=:child_id',array(':parent_id'=>$parent_id,':child_id'=>$child_id));
-	if($result->rowCount()==0)
+	$result=db_query('select count(*) as count FROM {related} WHERE from_id=:parent_id and to_id=:child_id',array(':parent_id'=>$parent_id,':child_id'=>$child_id));
+	foreach($result as $r);
+	drupal_set_message('Successful');
+	if($r->count==0)
 	{
-		db_insert('related')->fields(array('from_id'=>$parent_id,'to_id'=>$child_id));
+		drupal_set_message('Successful');
+		db_insert('related')->fields(array('from_id'=>$parent_id,'to_id'=>$child_id))->execute();
 	}
 	drupal_set_message('Link Successfully Created');
 	drupal_goto('node/'.$sql_id);	
@@ -65,6 +68,7 @@ r.to_id=n.nid',array(':parent_id'=>$parent_id));
 
 function CQFsql_node_view_alter(&$build)
 {
+		global $user;
 		drupal_add_library("system", "ui.tabs");
 		drupal_add_library("system", "ui.dialog");
 		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
@@ -106,23 +110,23 @@ t.rid=c.id',array(':parent_id'=>$new_node->nid));
 							);
 
 
+
+				}
 				// New part added for question form for
 				// subquery popup
 				
  				$new_new_node = (object) array(
  					'uid' => $user->uid,
  					'name' => (isset($user->name) ? $user->name : ''),
- 					'type' => $child_type,
+ 					'type' => 'nl_question',
  					'language' => LANGUAGE_NONE,
  				); 		
-				$new_form=drupal_get_form('nl_question',$new_new_node);
+				$new_form=drupal_get_form('nl_question_node_form',$new_new_node);
 	$new_form['parent_nlq']=array('#name'=>'parent_nlq','#type'=>'hidden','#value'=>$pid);
 	$new_form['parent_sql']=array('#name'=>'parent_sql','#type'=>'hidden','#value'=>$new_node->nid);
 	$new_form['table_name']=array('#name'=>'table_name','#type'=>'hidden','#value'=>$table_name);
 
 				//
-
-				}
 				$nodeset[$table_name]=$new_form;
 				$itemset[$table_name]=$items;
 			}

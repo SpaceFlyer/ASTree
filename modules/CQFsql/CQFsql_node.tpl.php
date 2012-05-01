@@ -1,6 +1,6 @@
 <?php foreach($itemset as $table_name=>$recommend_set){
-	echo render($nodeset[$table_name]); 
 echo "<div id='add_table_dialog_".$table_name."' class='astree_dialog' >";?>
+<?php	echo render($nodeset[$table_name]); ?>
 <label><?= t('From recommend list:') ?></label>
 <ul>
 
