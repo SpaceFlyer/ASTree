@@ -1,0 +1,4 @@
+name = Gen SQL
+description = Build SQL for trees
+core = 7.x
+

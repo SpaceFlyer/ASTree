@@ -4,6 +4,7 @@ function astree_get_recommend_related_list($from_id){
 	$query = db_select('node', 'n')
 	->fields('n', array('nid', 'title', 'created'))
 	->condition('status', 1) //Published.
+    ->condition('type', 'nl_question')
 	->orderBy('created', 'DESC') //Most recent first.
 	->execute();
 	return $query;
@@ -14,14 +15,14 @@ function astree_get_recommend_child_list($parent_id){
 }
 
 function astree_node_view_alter(&$build){
-	if ($build['#view_mode'] == 'full'){
+	if ($build['#view_mode'] == 'full' /*&& $build['#node']->type=='nl_question'*/){
 		drupal_add_library("system", "ui.tabs");
 		drupal_add_library("system", "ui.dialog");
 		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
 
- 		$children_result = db_query("SELECT child_id FROM children WHERE parent_id = :parent_id",
+ 		$children_result = db_query("SELECT child_id FROM {children} WHERE parent_id = :parent_id",
  				array(':parent_id' => $build['#node']->nid));
- 		$related_result = db_query("SELECT to_id FROM related WHERE from_id = :from_id",
+ 		$related_result = db_query("SELECT to_id FROM {related} WHERE from_id = :from_id",
  				array(':from_id' => $build['#node']->nid));
  		
  		$node = $build['#node'];
@@ -29,8 +30,15 @@ function astree_node_view_alter(&$build){
  		$children = array('#parent_id' => $node->nid);
  		while ($child = $children_result->fetchObject()){
  			$child_node = node_load($child->child_id);
- 			$children[] = node_view($child_node, 'teaser');
+            if ($child->child_id == -1)
+                continue;
+	    global $user;
+            if ($child_node->status==1 || (in_array('administrator', array_values($user->roles))) || $child_node->uid==$user->uid)
+ 			    $children[] = node_view($child_node, 'teaser');
  		}
+        if (count($children) == 1){
+            $children[] = array('#markup' => 'It\'s empty right now');
+        }
  		
  		// This line is necessary... see a comment in http://api.drupal.org/api/drupal/includes%21form.inc/function/drupal_get_form/7
  		// However, preview seems still not work
@@ -38,18 +46,20 @@ function astree_node_view_alter(&$build){
  		
  		global $user;
  		
+        $child_type = ($node->type == 'nl_question' ? 'answer_sql' : 'nl_question');
  		$new_node = (object) array(
  				'uid' => $user->uid,
  				'name' => (isset($user->name) ? $user->name : ''),
- 				'type' => $node->type,
+ 				'type' => $child_type,
  				'language' => LANGUAGE_NONE,
  		); 		
- 		$child_form = drupal_get_form($node->type . '_node_form', $new_node); // TODO Change to the child type we need according to parent type
+ 		$child_form = drupal_get_form($child_type . '_node_form', $new_node); // TODO Change to the child type we need according to parent type
  		$child_form['parent_id'] = array(
  				'#name' => 'parent_id', // This name is required!
  				'#type' => 'hidden',
  				'#value' => $node->nid,
  		);
+        $children['#child_type'] = $child_type;
  		$children['new_child_form'] = $child_form;
  		
  		$list = astree_get_recommend_child_list($node->nid);
@@ -158,7 +168,7 @@ function astree_parse_nid($post){
 }
 
 function _add_child($parent_id, $child_id){
-	$result = db_query("INSERT INTO children(parent_id, child_id) VALUES(:parent_id, :child_id)",
+	$result = db_query("INSERT INTO {children}(parent_id, child_id) VALUES(:parent_id, :child_id)",
 			array(':parent_id' => $parent_id, ':child_id' => $child_id));
 	return $result;	
 }
@@ -178,14 +188,14 @@ function astree_remove_child($parent_id, $child_id){
 	if ($child_id == null)
 		$child_id = astree_parse_nid($post);
 // 	echo 'remove parent_id, child_id = '.$parent_id.', '.$child_id;
-	$result = db_query("DELETE FROM children WHERE parent_id = :parent_id AND child_id = :child_id",
+	$result = db_query("DELETE FROM {children} WHERE parent_id = :parent_id AND child_id = :child_id",
 			array(':parent_id' => $parent_id, ':child_id' => $child_id));
 	drupal_set_message($result->rowCount().' child has been successfully removed.');
 	drupal_goto('node/'.$parent_id);
 }
 
 function _add_related($from_id, $to_id){
-	$result = db_query("INSERT INTO related(from_id, to_id) VALUES(:from_id, :to_id)",
+	$result = db_query("INSERT INTO {related}(from_id, to_id) VALUES(:from_id, :to_id)",
 			array(':from_id' => $from_id, ':to_id' => $to_id));
 	return $result;
 }
@@ -205,7 +215,7 @@ function astree_remove_related($from_id, $to_id){
 	if ($to_id == null)
 		$to_id = astree_parse_nid($post);
 // 	echo 'remove from_id, to_id = '.$from_id.', '.$to_id;
-	$result = db_query("DELETE FROM related WHERE from_id = :from_id AND to_id = :to_id",
+	$result = db_query("DELETE FROM {related} WHERE from_id = :from_id AND to_id = :to_id",
 			array(':from_id' => $from_id, ':to_id' => $to_id));
 	drupal_set_message($result->rowCount().' related node has been successfully removed.');
 	drupal_goto('node/'.$from_id);

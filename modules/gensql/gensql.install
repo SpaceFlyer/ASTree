@@ -1,0 +1,31 @@
+<?php
+function gensql_schema(){
+	$schema['table_names'] = array(
+			'description' => 'The name for a subquery\'s table',
+			'fields' => array(
+					'id' => array(
+							'description' => 'Primary Key for this Relation',
+							'type' => 'serial',
+							'unsigned' => TRUE,
+							'not null' => TRUE,
+					),
+					'rid' => array(
+							'type' => 'int',
+							'not null' => TRUE,
+							'description' => 'The id of subquery relationship',
+					),
+					'name' => array(
+							'type' => 'text',
+							'not null' => TRUE,
+					),
+			),
+			'primary key' => array('id'),
+			'foreign keys' => array(
+					'name_rid' => array(
+							'table' => 'children',
+							'columns' => array('rid' => 'id'),
+					),
+			),
+	);
+	return $schema;
+}

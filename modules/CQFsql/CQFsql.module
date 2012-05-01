@@ -1,0 +1,479 @@
+<?php
+
+//$dummy=CQFsql_check_correctness('select * from votes_info');
+function CQFsql_conn1ect_db()
+{
+/*	$databases['CQF_database']['default'] = array(
+  'driver' => 'pgsql',
+  'database' => 'rohit',
+  'username' => 'rohit',
+  'password' => 'rohit',
+  'host' => 'cgi.cs.duke.edu',
+);*/
+
+$conn1 = Database::getConnection('default','CQF_database');
+return $conn1;
+
+}
+
+
+function CQFsql_menu(){
+	$items['add_table']=array(
+			'title'=> 'Information for an Intermediate Table',
+			'page callback'=>'CQFsql_add_table',
+			'access arguments'=>array('access content'),
+	);
+	return $items;
+}
+
+
+function CQFsql_add_table($parent_id,$sql_id,$table_name,$child_id){
+	$post=$_POST['child_id'];
+//	if($child_id==null)
+//		$child_id=astree_parse_nid($post);
+	$result=db_query('select rid from {table_names} as t,{children} as c
+where t.name=:tablename and t.rid=c.id and
+c.parent_id=:parent_id',array(':parent_id'=>$sql_id,':tablename'=>$table_name));
+	foreach($result as $r);
+	$rid=$r->rid;
+//	$result=db_update('children')->fields(array('child_id'=>$child_id))->condition('id',$rid)->execute();
+	$result=db_query('UPDATE {children} SET child_id=:child_id WHERE id=:rid',array(':child_id'=>$child_id,':rid'=>$rid));
+	drupal_set_message('Link Successfully Created');
+	drupal_goto('node/'.$sql_id);	
+
+}	
+
+function CQFsql_get_recommend_child_list($parent_id)
+{
+	$result=db_query('SELECT n.nid as nid,n.title as title,n.created as created
+FROM {node} as n,{related} as r WHERE r.from_id=:parent_id and
+r.to_id=n.nid',array(':parent_id'=>$parent_id));
+	return $result;
+}
+
+
+
+function CQFsql_node_view_alter(&$build)
+{
+		drupal_add_library("system", "ui.tabs");
+		drupal_add_library("system", "ui.dialog");
+		drupal_add_css(drupal_get_path('module', 'astree')."/astree.css");
+	$new_node=$build['#node'];
+	
+	if($new_node->type=='answer_sql')
+	{
+		$parent_id_result=db_query('select parent_id from {children} where child_id=:child_id',array(':child_id'=>$new_node->nid));
+		foreach($parent_id_result as $parent_id);
+		$pid=$parent_id->parent_id;
+		if(module_exists('astree'))
+		{
+			$list=CQFsql_get_recommend_child_list($pid);
+			$itemset=array();
+			$child_tables_result=db_query('select name from {table_names} as t,{children}
+as c where c.parent_id=:parent_id and child_id=-1 and
+t.rid=c.id',array(':parent_id'=>$new_node->nid));
+			if($child_tables_result->rowCount()==0 && $new_node->status!=1)
+			{
+				db_update('node')->fields(array('status'=>1))->condition('nid',$new_node->nid,'=')->execute();
+			}	
+			foreach($child_tables_result as $child_table)
+			{
+				$table_name=$child_table->name;
+				$items=array();
+				foreach($list as $child)
+				{
+					$items[]=array(
+							'title'=>l($child->title,'node/'.$child->nid),
+							'action'=>l(t('Use this query as 
+'.$table_name),"add_table/{$pid}/{$new_node->nid}/{$table_name}/{$child->nid}")
+							);
+				}
+				$itemset[$table_name]=$items;
+			}
+		}
+		$build['newfield']=array('#markup'=>theme('CQFsql_node',array('itemset'=>$itemset)));	
+	   }	
+	
+}
+
+function CQFsql_node_presave($node)
+{
+	if($node->type=='answer_sql' && $node->op!='Delete'){
+		$list_of_tables=CQFsql_list_tables($node->title);
+		if(count($list_of_tables)!=0)
+			$node->status=0;
+	}
+}
+
+function CQFsql_node_form()
+{
+  global $user;
+  module_load_include('inc', 'node', 'node.pages');  
+  $node_type = 'nl_question';
+  $form_id = $node_type . '_node_form';
+  // maybe add current users info
+  // create a blank node
+  $new_node->uid = $user->uid; 
+  $new_node->name = (isset($user->name) ? $user->name : '');
+  $new_node->type = $node_type;
+  
+  // Invoke hook_nodapi and hook_node
+  node_object_prepare($new_node);
+  // Or you can also use an exiting node, for example 
+  // $node = node_load(123);
+  // and the display the form:
+  $output = drupal_get_form($form_id, $new_node);
+  $out=theme('CQFsql_node',array('output'=>$output));
+}
+
+
+
+
+function CQFsql_list_tables($sql_query)
+{
+	$list_of_new_tables=array();
+	$table_names = explode("?^", $sql_query);
+	for($i=1;$i<sizeof($table_names)-1;$i++)
+	{
+		if($table_names[$i][0]!=' ' && $table_names[$i][0]!=',')
+		{
+			$list_of_new_tables[sizeof($list_of_new_tables)]=$table_names[$i];
+		}
+	}
+	return $list_of_new_tables;
+}
+
+
+function CQFsql_check_correctness($sql_query)
+{
+	$conn1=CQFsql_conn1ect_db();
+
+	$list_of_tables=CQFsql_list_tables($sql_query);
+		$attribute=array();
+	for($i=0;$i<count($list_of_tables);$i++)
+	{
+		$table=$list_of_tables[$i];
+		if(!isset($attribute[$table]))
+			$attribute[$table]=array('temp');
+	}
+	$sql_query=str_replace("?^","",$sql_query);
+	$sql_query=str_replace(".","__",$sql_query);
+//	$tokens=preg_split('(, ;=><\n\t)',$sql_query);
+	$tokens = preg_split('@[\W]+@', $sql_query);
+//	print_r($tokens);
+//	print_r($list_of_tables);
+	for($i=0;$i<count($tokens);$i++)
+	{
+		$token=$tokens[$i];
+		for($j=0;$j<count($list_of_tables);$j++)
+		{
+			$table=$list_of_tables[$j];
+			if(strpos($token,$table."__")!==false)
+			{
+				$token=str_replace($table."__","",$token);
+				//$attribute[$table]['attributes']=$token;
+				array_push($attribute[$table],$token);
+				
+			}
+		}
+	}
+
+
+	$sql_query=str_replace("__",".",$sql_query);
+/*		for($i=0;$i<count($attribute);$i++)*/
+		foreach($attribute as $table=>$att) 
+		{
+				
+			$insert_query='CREATE TABLE '.$table.' (';
+			for($j=0;$j<count($attribute[$table]);$j++)
+			{
+				$a=$attribute[$table][$j];
+				if($j==count($attribute[$table])-1)
+					$insert_query=$insert_query.$a.' int';
+				else
+					$insert_query=$insert_query.$a.' int,';
+			}
+			$insert_query=$insert_query.')';
+					
+			$result=$conn1->query($insert_query);
+		}
+			
+		
+
+
+
+
+
+
+	Try{	
+	$result = $conn1->query($sql_query);
+	foreach($list_of_tables as $tab)
+	{
+		$conn1->query('DROP TABLE '.$tab);
+	}
+	return true;
+	}
+	Catch(Exception $e)
+	{
+		foreach($list_of_tables as $tab)
+		{
+			$conn1->query('DROP TABLE '.$tab);
+		}
+		return $e->getMessage();
+	}
+	
+	//CQFsql_list_tables($sql_query);
+}
+
+
+/*function CQFsql_form_alter(&$form,&$form_state,$form_id)
+{	
+     
+   // if (isset($form['type']) && $form_id=='answer_sql') {
+	print_r($form);
+	drupal_set_message(t($form_id));
+    $form['#node']['upload_' . $form['type']['#value']] = array(
+      '#type' => 'radios', 
+      '#title' => t('Attachments'), 
+      '#default_value' => variable_get('upload_' . $form['type']['#value'], 1), 
+      '#options' => array(t('Disabled'), t('Enabled')),
+    );
+ // }
+
+}*/
+
+function CQFsql_node_info()
+{
+}
+
+
+function CQFsql_node_validate($node,$form,&$form_state)
+{
+//	node_delete()
+	if($node->type=='answer_sql' && $node->op!='Delete')
+	{
+	//	echo "<h1>Hi</h1>";
+		$conn1 = Database::getConnection('default','CQF_database');
+		$sql_query=$node->title;
+		$list_of_new_tables=array();
+		$table_names = explode("?^", $sql_query);
+		for($i=1;$i<sizeof($table_names)-1;$i++)
+		{
+			if($table_names[$i][0]!=' ' && $table_names[$i][0]!=',')
+			{
+				$list_of_new_tables[sizeof($list_of_new_tables)]=$table_names[$i];
+			}
+		}
+		$list_of_tables=$list_of_new_tables;
+		$attribute=array();
+		for($i=0;$i<count($list_of_tables);$i++)
+		{
+			$table=$list_of_tables[$i];
+			if(!isset($attribute[$table]))
+				$attribute[$table]=array('temp');
+		}
+		$sql_query=str_replace("?^","",$sql_query);
+		$sql_query=str_replace(".","__",$sql_query);
+//	$tokens=preg_split('(, ;=><\n\t)',$sql_query);
+		$tokens = preg_split('@[\W]+@', $sql_query);
+//	print_r($tokens);
+//	print_r($list_of_tables);
+		for($i=0;$i<count($tokens);$i++)
+		{
+			$token=$tokens[$i];
+			for($j=0;$j<count($list_of_tables);$j++)
+			{
+				$table=$list_of_tables[$j];
+				if(strpos($token,$table."__")!==false)
+				{
+					$token=str_replace($table."__","",$token);
+					//$attribute[$table]['attributes']=$token;
+					array_push($attribute[$table],$token);
+				
+				}
+			}
+		}
+
+
+	$sql_query=str_replace("__",".",$sql_query);
+/*		for($i=0;$i<count($attribute);$i++)*/
+		foreach($attribute as $table=>$att) 
+		{
+		
+			$insert_query='CREATE TABLE '.$table.' (';
+			for($j=0;$j<count($attribute[$table]);$j++)
+			{
+				$a=$attribute[$table][$j];
+				if($j==count($attribute[$table])-1)
+					$insert_query=$insert_query.$a.' int';
+				else
+					$insert_query=$insert_query.$a.' int,';
+			}
+			$insert_query=$insert_query.')';
+					
+			$result=$conn1->query($insert_query);
+		//	print "Table created";
+		}
+			
+		
+
+
+
+
+
+
+	Try{	
+	$result = $conn1->query($sql_query);
+		foreach($list_of_tables as $tab)
+		{
+			$conn1->query('DROP TABLE '.$tab);
+		}
+	}
+	Catch(Exception $e)
+	{
+		foreach($list_of_tables as $tab)
+		{
+			$conn1->query('DROP TABLE '.$tab);
+		}
+		$error=$e->getMessage();
+		$er=2;
+
+	}
+	if(!isset($er))
+	{
+		$er=1;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	//	form_set_error('sql_query_cqf',$form['parent_id']['#value']);
+	/*	$e=CQFsql_check_correctness($node->title);
+		print $e;*/
+		if($er!=1)	
+		{
+			$errors=explode(":",$e);
+			$errors=array_slice($errors,1,count($errors)-1);
+			$e=implode($errors);
+			$errors=explode("/home",$e);
+			form_set_error('sql_query_error',$errors[0]);
+		}
+	
+	}
+}
+		/*	print "<script>
+			jQuery(document).ready(function(){
+				jQuery('#add_existed_child_tab').dialog({
+autoOpen: false, width: 600, height: 450 });
+			});
+		</script>";*/
+		//global $node1;
+		//$node1=$node;
+		//$node=array();
+//		CQFsql_node_form();
+	
+	//	form_set_error('sql_query_cqf',count($table_list));
+		
+//		node_delete(7);
+	//	form_set_error('sql_query_cqf',$node->type);
+	
+
+
+function CQFsql_node_insert($node)
+{
+	if($node->type=='answer_sql' && $node->op!='Delete')
+	{
+		$sql_query=$node->title;
+		$list_of_new_tables=array();
+		$table_names = explode("?^", $sql_query);
+		for($i=1;$i<sizeof($table_names)-1;$i++)
+		{
+			if($table_names[$i][0]!=' ' && $table_names[$i][0]!=',')
+			{
+			$list_of_new_tables[sizeof($list_of_new_tables)]=$table_names[$i];
+			}
+		}
+	
+		for($i=0;$i<count($list_of_new_tables);$i++)
+		{
+			$id_children=db_insert('children')->fields(array('parent_id'=>$node->nid))->execute();
+			$id_table_names=db_insert('table_names')->fields(array('rid'=>$id_children,'name'=>$list_of_new_tables[$i]))->execute();
+		}
+		$node->title=str_replace("?^","",$node->title);
+	//	db_update('node')->fields(array('title'=>$new_query))->condition('nid',$node->nid)->execute();
+	}
+		
+}
+
+
+function CQFsql_node_delete($node)
+{
+	if($node->type=='answer_sql')
+		db_delete('children')->condition('parent_id',$node->nid)->execute();
+}
+
+
+
+
+function CQFsql_get_statistics($node_id,$type)
+{
+	if($type=='children')
+	{
+	$result=db_query('select count(*) as count from {children} WHERE
+parent_id=:nodeid',array(':nodeid'=>$node_id));
+	}
+	else if($type=='related')
+	{$result=db_query('select count(*) as count from {related} WHERE
+from_id=:nodeid',array(':nodeid'=>$node_id));}
+//	$query=db_select('children','c');
+//	$query->condition('c.parent_id',$node_id,'=');
+//	$query->addExpression('count(*)','count');
+	
+	if(!$result)
+	{
+		return -1;
+	}
+	foreach($result as $record);
+	print $record->count;
+	return $record->count;	
+}
+
+function CQFsql_node_view($node,$view_mode)
+{
+//	if (($view_mode == 'teaser' && $teaserdisplay == 1)) {
+	if (($view_mode == 'teaser' && $node->type=='nl_question')) {
+	$node->content['SQL_answers']=array(
+		'markup'=>'<div>'.CQFsql_get_statistics($node->nid,'children').'</div>',
+//		'markup'=>'<div>'.CQFsql_check_correctness('select count(*) from votes_info').'</div>',
+		'#weight'=>100,
+	);
+	$node->content['subquery']=array(
+		'markup'=>'<div>'.CQFsql_get_statistics($node->nid,'related').'</div>',
+//		'markup'=>'<div>'.CQFsql_check_correctness('select count(*) from votes_info').'</div>',
+		'#weight'=>100,
+	);
+	
+
+    }
+
+}
+
+function CQFsql_theme()
+{
+    return array(
+    'CQFsql_node' => array(
+      'template' => 'CQFsql_node',
+      'variables' => array('itemset' => NULL),
+    ),
+  );
+}
+
+?>

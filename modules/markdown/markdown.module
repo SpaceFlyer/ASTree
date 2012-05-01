@@ -25,6 +25,8 @@ function _filter_markdown_tips($format, $long = FALSE) {
     if ($long) {
         // Add tips for LaTex
     return t('Quick Tips:<ul>
+      <li>If you need to add custom tables, enclose the table name in the "<code>FROM</code>" clause between \'<code>?^</code>\' tags</br>
+        Example: <code>?^table_name?^</code></li>
       <li>Two or more spaces at a line\'s end = Line break</li>
       <li>Double returns = Paragraph</li>
       <li>`inline_code($foo) # xxx` = <code>inline_code($foo) # xxx</code></li>

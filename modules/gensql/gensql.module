@@ -1,0 +1,65 @@
+<?php
+
+function gensql_get_children($node){
+    $db_result = db_query("SELECT child_id FROM {children} WHERE parent_id = :parent_id",
+                    array(':parent_id' => $node->nid));
+    $result = array();
+    while ($row = $db_result->fetchObject()){
+        $result[] = node_load($row->child_id);
+    }
+    return $result;
+}
+
+function gensql_get_name($parent_id, $child_id){
+    $db_result = db_query("SELECT name FROM {table_names}, {children} WHERE  {table_names}.rid = {children}.id AND {children}.parent_id = :parent_id AND {children}.child_id = :child_id", array(":parent_id" => $parent_id, ":child_id" => $child_id));
+    return $db_result->fetchObject()->name;
+}
+
+function gensql_get_sql($node){
+    $type = $node->type;
+    $children = gensql_get_children($node);
+    if ($type == "nl_question"){
+        foreach ($children as $child){
+            $result = gensql_get_sql($child);
+            if ($result != "NOT_YET_SOLVED") return $result;
+        }
+    }
+    if ($type == "answer_sql"){
+//        echo "\n".$node->nid.": ";//TODO TEST
+        $result = "";
+        $first = TRUE;
+        foreach ($children as $child){
+//            echo $child->nid . ", ";//TODO TEST
+            $temp = gensql_get_sql($child);
+            if ($temp == "NOT_YET_SOLVED") 
+                return $temp;
+            else {
+                $name = gensql_get_name($node->nid, $child->nid);
+                $result .= ($first ? ", " : "");
+                $result .= "{$temp} as $name";
+                $first = FALSE;
+            }    
+        }
+        $result .= $node->title;
+        if (!$first) $result = "WITH ".$result;
+//        echo "\n";//TODO TEST
+        return $result;
+    }
+    return "NOT_YET_SOLVED";
+}
+
+
+function gensql_node_view_alter(&$build){
+    if ($build['#view_mode'] == 'full'){
+        drupal_add_js(drupal_get_path('module', 'gensql')."/gensql.js");
+        $node = $build['#node'];
+        $sql = gensql_get_sql($node);
+        $encoded = urlencode($sql);
+        $sql_link = "http://cgi.cs.duke.edu/~rohit/phpPgAdmin-5.0.2/sql.php?subject=database&action=sql&new=1&server=localhost%3A5432%3Aallow&database=rohit&query=$encoded&paginate=t";
+        if ($sql != "NOT_YET_SOLVED")
+            $build['links']['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'><a target='_blank' href='$sql_link'>See the answer</a></div>");
+        else
+            $build['links']['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'>Not yet solved</div>");
+    }        
+}
+

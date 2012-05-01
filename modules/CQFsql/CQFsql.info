@@ -1,0 +1,3 @@
+name = CQF_sql
+description = Contains all the functions needed for background SQL/postgresql communication CQF
+core = 7.x

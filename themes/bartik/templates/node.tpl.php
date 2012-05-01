@@ -77,14 +77,55 @@
  * @see template_preprocess_node()
  * @see template_process()
  */
+foreach($content as $key => $value)
+{
+	if($key=='SQL_answers')
+	{
+		$sql_count=$content[$key]['markup'];
+	}
+	if($key=='subquery')
+	{
+		$subquery_count=$content[$key]['markup'];
+	}
+}
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
 
   <?php print render($title_prefix); ?>
   <?php if (!$page): ?>
+	<?php if($type=="nl_question"){?>
+	<div class='question-summary'>
+	<div class='cp'>
+	<div class='votes'>
+	<div class='mini-counts'>
+	<?php	print $sql_count; ?>
+	</div>
+	<div>
+	Solutions
+	</div>
+	</div>
+	
+	<div class='votes'>
+		<div class='mini-counts'>
+		<?php	print $comment_count; ?>
+		</div>
+		<div>
+		Comments
+		</div>
+	</div>
+	
+	</div>
+	<div class='summary'>
+	<?php }?>
+
     <h2<?php print $title_attributes; ?>>
       <a href="<?php print $node_url; ?>"><?php print $title; ?></a>
     </h2>
+	
+	<?php if($type=="nl_question"){?>
+	</div>
+	</div>
+	<?php }?>
   <?php endif; ?>
   <?php print render($title_suffix); ?>
 
