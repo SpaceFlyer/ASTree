@@ -1,7 +1,7 @@
 <?php foreach($itemset as $table_name=>$recommend_set){
 echo "<div id='add_table_dialog_".$table_name."' class='astree_dialog' >";?>
-<?php	echo render($nodeset[$table_name]); ?>
-<label><?= t('From recommend list:') ?></label>
+<?php if (count($recommend_set) > 0){ ?>
+<label><?= t('From related questions:') ?></label>
 <ul>
 
 	<?php foreach ($recommend_set as $child) { ?>
@@ -12,7 +12,12 @@ echo "<div id='add_table_dialog_".$table_name."' class='astree_dialog' >";?>
 </div>
 </li>
 <?php }?> 
+</ul>
+<hr/>
+<?php } ?>
 
+<label><?= t('Create a new question:') ?></label>
+<?php	echo render($nodeset[$table_name]); ?>
 </div>
 <script>
 jQuery(document).ready(function(){
@@ -20,7 +25,6 @@ jQuery(document).ready(function(){
 			});
 		</script>
 <?php echo "<a href='javascript:void(0)' onclick=\"jQuery('#add_table_dialog_".$table_name."').dialog('open')\">Describe ".$table_name." or choose a similar description</a>";?>
-</ul>
 <?php }?>
 		
 		
