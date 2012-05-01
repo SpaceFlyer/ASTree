@@ -25,25 +25,21 @@ function gensql_get_sql($node){
         }
     }
     if ($type == "answer_sql"){
-//        echo "\n".$node->nid.": ";//TODO TEST
         $result = "";
         $first = TRUE;
         foreach ($children as $child){
-//            echo $child->nid . ", ";//TODO TEST
             $temp = gensql_get_sql($child);
             if ($temp == "NOT_YET_SOLVED") 
                 return $temp;
             else {
                 $name = gensql_get_name($node->nid, $child->nid);
                 $result .= ($first ? "" : ", ");
-                $result .= "{$temp} as $name";
+                $result .= "$name AS ($temp)";
                 $first = FALSE;
             }    
         }
         $result .= " ".$node->title;
         if (!$first) $result = "WITH ".$result;
-//        echo "\n";//TODO TEST
-        echo $result."\n";//TODO TEST
         return $result;
     }
     return "NOT_YET_SOLVED";
