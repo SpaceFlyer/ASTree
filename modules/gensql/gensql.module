@@ -51,12 +51,19 @@ function gensql_node_view_alter(&$build){
         drupal_add_js(drupal_get_path('module', 'gensql')."/gensql.js");
         $node = $build['#node'];
         $sql = gensql_get_sql($node);
+
+
+
+
         $encoded = urlencode($sql);
+     //   $encoded = $sql;
         $sql_link = "http://cgi.cs.duke.edu/~rohit/phpPgAdmin-5.0.2/sql.php?subject=database&action=sql&new=1&server=localhost%3A5432%3Aallow&database=rohit&query=$encoded&paginate=t";
+        $sql_link = "http://cgi.cs.duke.edu/~rohit/dbaccess.php?query=$encoded";
         if ($sql != "NOT_YET_SOLVED")
-            $build['links']['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'><a target='_blank' href='$sql_link'>See the answer</a></div>");
+            $build['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'><a target='_blank'
+href='$sql_link'>See the answer</a></div>");
         else
-            $build['links']['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'>Not yet solved</div>");
+            $build['table_link'] = array('#markup' => "<div style='text-align: right; font-size: 17px' id='table_link'>Not yet solved</div>");
     }        
 }
 

@@ -61,6 +61,8 @@ function CQFsql_get_recommend_child_list($parent_id)
 	$result=db_query('SELECT n.nid as nid,n.title as title,n.created as created
 FROM {node} as n,{related} as r WHERE r.from_id=:parent_id and
 r.to_id=n.nid',array(':parent_id'=>$parent_id));
+/*	$result=db_query("SELECT n.nid as nid,n.title as title,n.created as created
+FROM {node} as n WHERE n.type='nl_question' ORDER BY nid DESC LIMIT 10");*/
 	return $result;
 }
 
@@ -87,13 +89,17 @@ function CQFsql_node_view_alter(&$build)
 			$child_tables_result=db_query('select name from {table_names} as t,{children}
 as c where c.parent_id=:parent_id and child_id=-1 and
 t.rid=c.id',array(':parent_id'=>$new_node->nid));
-			if($child_tables_result->rowCount()==0 && $new_node->status!=1)
+			if(strpos("?^",$new_node->title)===false)
+			{
+				$new_node->title=str_replace("?^","",$new_node->title);
+				node_save($new_node);
+			//	db_update('node')->fields(array('title'=>$new_node->title))->condition('nid',$new_node->nid,'=')->execute();
+			}
+			if($child_tables_result->rowCount()==0 && $new_node->status!=NODE_PUBLISHED)
 			{
 				$new_node->status=1;
-				$new_node->title=str_replace("?^","",$new_node->title);
-			//		node_save(&$new_node));
-				db_update('node')->fields(array('title'=>$new_node->title))->condition('nid',$new_node->nid,'=')->execute();
-				db_update('node')->fields(array('status'=>1))->condition('nid',$new_node->nid,'=')->execute();
+				$build['#node']->status=1;
+				db_update('node')->fields(array('status'=>NODE_PUBLISHED))->condition('nid',$new_node->nid,'=')->execute();
 			}
 				
  		form_load_include($form_state, 'inc', 'node', 'node.pages');
@@ -136,14 +142,14 @@ t.rid=c.id',array(':parent_id'=>$new_node->nid));
 	
 }
 
-function CQFsql_node_presave($node)
+/*function CQFsql_node_presave($node)
 {
 	if($node->type=='answer_sql' && $node->op!='Delete'){
 		$list_of_tables=CQFsql_list_tables($node->title);
 		if(count($list_of_tables)!=0)
 			$node->status=0;
 	}
-}
+}*/
 
 function CQFsql_node_form()
 {
@@ -328,7 +334,8 @@ function CQFsql_node_validate($node,$form,&$form_state)
 				{
 					$token=str_replace($table."__","",$token);
 					//$attribute[$table]['attributes']=$token;
-					array_push($attribute[$table],$token);
+					if(!in_array($token,$attribute[$table]))
+						array_push($attribute[$table],$token);
 				
 				}
 			}
@@ -404,7 +411,8 @@ function CQFsql_node_validate($node,$form,&$form_state)
 			$errors=array_slice($errors,1,count($errors)-1);
 			$e=implode($errors);
 			$errors=explode("/home",$e);
-			form_set_error('sql_query_error',$errors[0]);
+			form_set_error('sql_query_error','Sorry, We think there might be an error in your SQL. Please review your SQL for errors or contact
+the administrators for assistance\n'.$errors[0]);
 		}
 	
 	}
@@ -486,7 +494,7 @@ from_id=:nodeid',array(':nodeid'=>$node_id));}
 		return -1;
 	}
 	foreach($result as $record);
-	print $record->count;
+//	print $record->count;
 	return $record->count;	
 }
 

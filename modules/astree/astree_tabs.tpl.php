@@ -8,11 +8,19 @@
 	<ul>
 		<li><a href="#tabs-1">
             <?php if ($children['#child_type'] == 'answer_sql') echo 'SQL solutions'; else echo 'Subqueries'; ?>
+            <?php echo "({$children['#count']})" ?>
         </a></li>
         <?php if ($children['#child_type'] == 'answer_sql') { ?> 
-		<li><a href="#tabs-2">Related</a></li>
+		<li>
+        <a href="#tabs-2">
+            Related
+            <?php echo "({$related['#count']})" ?>
+        </a></li>
         <?php } ?>
-		<li><a href="#tabs-3">Comments</a></li>
+		<li><a href="#tabs-3">
+            Comments
+            <?php echo "({$comments['#comment_count']})" ?>
+        </a></li>
 	</ul>
 	
 	<div id="tabs-1">

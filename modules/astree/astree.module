@@ -33,12 +33,13 @@ function astree_node_view_alter(&$build){
             if ($child->child_id == -1)
                 continue;
 	    global $user;
-            if ($child_node->status==1 || (in_array('administrator', array_values($user->roles))) || $child_node->uid==$user->uid)
+           // if ($child_node->status==NODE_PUBLISHED || (in_array('administrator', array_values($user->roles))) || $child_node->uid==$user->uid)
  			    $children[] = node_view($child_node, 'teaser');
  		}
         if (count($children) == 1){
             $children[] = array('#markup' => 'It\'s empty right now');
         }
+        $children['#count'] = count($children)-1;
  		
  		// This line is necessary... see a comment in http://api.drupal.org/api/drupal/includes%21form.inc/function/drupal_get_form/7
  		// However, preview seems still not work
@@ -78,6 +79,7 @@ function astree_node_view_alter(&$build){
  			$related_node = node_load($record->to_id);
  			$related[] = node_view($related_node, 'teaser');
  		}
+        $related['#count'] = count($related)-1;
  		
  		$new_node = (object) array(
  				'uid' => $user->uid,
@@ -102,7 +104,14 @@ function astree_node_view_alter(&$build){
    					);
    		}
    		$related['recommend_related_list'] = $items;
- 			
+
+        $build['comments']['#comment_count'] = $node->comment_count;
+/*        foreach (array_keys($build['comments']) as $key){
+            if (is_int($key) || $key[0] >= '0' && $key[0] <= '9')
+                $comment_count++;
+        }*/
+        //print_r($build['comments']);
+
 		// We have to substitue comments field, rather than add some
 		// new field, because the outter theme (node.tpl.php) did a specific
 		// work to put comments field to the bottom
